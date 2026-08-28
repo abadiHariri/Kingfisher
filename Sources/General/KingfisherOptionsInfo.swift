@@ -390,6 +390,21 @@ public enum KingfisherOptionsInfoItem: Sendable {
     /// If the associated value is `nil`, the behavior is the same as not setting this option: the file extension is
     /// determined by the disk storage configuration.
     case forcedCacheFileExtension(String?)
+
+    /// Refuses to create an image from data that contains more pixels than the associated value.
+    ///
+    /// The pixel dimensions are read from the image header, which does not decode the image, so an
+    /// oversized image is rejected before it costs any memory. Kingfisher reports a
+    /// ``KingfisherError/ImageSettingErrorReason/dataProviderError(location:error:)``-free processing
+    /// failure for it, and the placeholder or failure image is shown instead.
+    ///
+    /// This is a defence against a remote image whose file size says nothing about its decoded size.
+    /// A 150 megapixel PNG needs around 600 MB to decode while being barely a megabyte on the wire,
+    /// and ``DownsamplingImageProcessor`` cannot avoid that: PNG has no scaled decoding, so the full
+    /// pixel array is reconstructed before a thumbnail can be produced.
+    ///
+    /// By default there is no limit.
+    case maxImagePixelCount(Int)
 }
 
 // MARK: - KingfisherParsedOptionsInfo
@@ -419,6 +434,9 @@ public struct KingfisherParsedOptionsInfo: Sendable {
     public var preloadAllAnimationData = false
     public var callbackQueue: CallbackQueue = .mainCurrentOrAsync
     public var scaleFactor: CGFloat = 1.0
+
+    /// The maximum number of pixels an image created from data may contain. `nil` means no limit.
+    public var maxImagePixelCount: Int? = nil
     public var requestModifier: (any AsyncImageDownloadRequestModifier)? = nil
     public var redirectHandler: (any ImageDownloadRedirectHandler)? = nil
     public var processor: any ImageProcessor = DefaultImageProcessor.default
@@ -466,6 +484,7 @@ public struct KingfisherParsedOptionsInfo: Sendable {
             case .preloadAllAnimationData: preloadAllAnimationData = true
             case .callbackQueue(let value): callbackQueue = value
             case .scaleFactor(let value): scaleFactor = value
+            case .maxImagePixelCount(let value): maxImagePixelCount = value
             case .requestModifier(let value): requestModifier = value
             case .redirectHandler(let value): redirectHandler = value
             case .processor(let value): processor = value
@@ -504,7 +523,8 @@ extension KingfisherParsedOptionsInfo {
             scale: scaleFactor,
             duration: 0.0,
             preloadAll: preloadAllAnimationData,
-            onlyFirstFrame: onlyLoadFirstFrame)
+            onlyFirstFrame: onlyLoadFirstFrame,
+            maxPixelCount: maxImagePixelCount)
     }
 }
 

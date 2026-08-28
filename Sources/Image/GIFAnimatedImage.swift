@@ -42,6 +42,9 @@ public struct ImageCreatingOptions: Equatable {
     /// For an animated image, indicates whether only the first image should be
     /// loaded as a static image. It is useful for previewing an animated image.
     public var onlyFirstFrame: Bool
+
+    /// The maximum number of pixels the created image may contain. `nil` means no limit.
+    public var maxPixelCount: Int?
     
     /// Creates an `ImageCreatingOptions` object.
     ///
@@ -55,17 +58,21 @@ public struct ImageCreatingOptions: Equatable {
     ///     - onlyFirstFrame: For an animated image, whether only the first image should be
     ///                       loaded as a static image. It is useful for previewing an animated image.
     ///                       Default is `false`.
+    ///     - maxPixelCount: The maximum number of pixels the created image may contain. Data holding a
+    ///                      larger image is rejected without being decoded. Default is `nil`, no limit.
     public init(
         scale: CGFloat = 1.0,
         duration: TimeInterval = 0.0,
         preloadAll: Bool = false,
-        onlyFirstFrame: Bool = false
+        onlyFirstFrame: Bool = false,
+        maxPixelCount: Int? = nil
     )
     {
         self.scale = scale
         self.duration = duration
         self.preloadAll = preloadAll
         self.onlyFirstFrame = onlyFirstFrame
+        self.maxPixelCount = maxPixelCount
     }
 }
 

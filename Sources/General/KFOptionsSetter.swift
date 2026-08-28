@@ -291,6 +291,22 @@ extension KFOptionSetter {
         return result
     }
 
+    /// Refuses to create an image from data holding more than `count` pixels.
+    /// - Parameter count: The maximum number of pixels an image created from data may contain.
+    /// - Returns: A `Self` value with the changes applied.
+    ///
+    /// The dimensions are read from the image header, so an oversized image is rejected before it is
+    /// decoded and the placeholder is shown instead. Use it to bound the memory a remote image can
+    /// cost: a file size says nothing about a decoded size, and ``DownsamplingImageProcessor`` cannot
+    /// help for a format such as PNG, which has no scaled decoding.
+    ///
+    /// By default there is no limit.
+    public func maxImagePixelCount(_ count: Int) -> Self {
+        let result = copyForMutation()
+        result.options.maxImagePixelCount = count
+        return result
+    }
+
     /// Sets whether the original image should be cached, even when the original image has been processed by other ``ImageProcessor``s.
     ///
     /// - Parameter enabled: Whether to cache the original image.

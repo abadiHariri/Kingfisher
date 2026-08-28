@@ -811,9 +811,11 @@ public struct DownsamplingImageProcessor: ImageProcessor {
             guard let data = image.kf.data(format: .unknown) else {
                 return nil
             }
-            return KingfisherWrapper.downsampledImage(data: data, to: size, scale: options.scaleFactor)
+            return KingfisherWrapper.downsampledImage(
+                data: data, to: size, scale: options.scaleFactor, maxPixelCount: options.maxImagePixelCount)
         case .data(let data):
-            return KingfisherWrapper.downsampledImage(data: data, to: size, scale: options.scaleFactor)
+            return KingfisherWrapper.downsampledImage(
+                data: data, to: size, scale: options.scaleFactor, maxPixelCount: options.maxImagePixelCount)
         }
     }
 }

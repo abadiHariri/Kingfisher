@@ -438,6 +438,7 @@ extension KingfisherWrapper where Base: KFCrossPlatformImage {
     /// - Returns: An `Image` object representing the image if successfully created. If the `data` is invalid or 
     /// unsupported, `nil` will be returned.
     public static func image(data: Data, options: ImageCreatingOptions) -> KFCrossPlatformImage? {
+        if exceedsPixelCount(options.maxPixelCount, in: data) { return nil }
         var image: KFCrossPlatformImage?
         switch data.kf.imageFormat {
         case .JPEG:
@@ -466,9 +467,18 @@ extension KingfisherWrapper where Base: KFCrossPlatformImage {
     ///
     /// > Important: The `pointSize` should be smaller than the size of the input image. If it is larger than the original image
     /// > size, the resulting image will have the same dimensions as the input without downsampling.
-    public static func downsampledImage(data: Data, to pointSize: CGSize, scale: CGFloat) -> KFCrossPlatformImage? {
+    public static func downsampledImage(
+        data: Data,
+        to pointSize: CGSize,
+        scale: CGFloat,
+        maxPixelCount: Int? = nil
+    ) -> KFCrossPlatformImage? {
         let imageSourceOptions = [kCGImageSourceShouldCache: false] as CFDictionary
         guard let imageSource = CGImageSourceCreateWithData(data as CFData, imageSourceOptions) else {
+            return nil
+        }
+
+        if let maxPixelCount, pixelCount(in: imageSource).map({ $0 > maxPixelCount }) ?? false {
             return nil
         }
         
@@ -483,5 +493,34 @@ extension KingfisherWrapper where Base: KFCrossPlatformImage {
             return nil
         }
         return KingfisherWrapper.image(cgImage: downsampledImage, scale: scale, refImage: nil)
+    }
+
+    /// Whether `data` holds an image with more than `limit` pixels. Always `false` when `limit` is `nil`.
+    ///
+    /// The dimensions come from the image header, so nothing is decoded and an image too large to
+    /// decode safely can be refused before it allocates anything.
+    static func exceedsPixelCount(_ limit: Int?, in data: Data) -> Bool {
+        guard let limit else { return false }
+        let imageSourceOptions = [kCGImageSourceShouldCache: false] as CFDictionary
+        guard let imageSource = CGImageSourceCreateWithData(data as CFData, imageSourceOptions) else {
+            return false
+        }
+        guard let count = pixelCount(in: imageSource) else { return false }
+        return count > limit
+    }
+
+    /// The pixel count of the image at index 0 of `imageSource`, or `nil` when the header does not say.
+    static func pixelCount(in imageSource: CGImageSource) -> Int? {
+        guard let properties = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil) as? [CFString: Any],
+              let width = properties[kCGImagePropertyPixelWidth] as? Int,
+              let height = properties[kCGImagePropertyPixelHeight] as? Int,
+              width > 0, height > 0
+        else {
+            return nil
+        }
+        // A header states the dimensions independently, so the product can overflow. Anything that
+        // large is over every limit anyway.
+        let (count, overflow) = width.multipliedReportingOverflow(by: height)
+        return overflow ? Int.max : count
     }
 }

@@ -230,7 +230,7 @@ extension KingfisherWrapper where Base: KFCrossPlatformImage {
     /// > For any non-CG-based image, the `base` image itself is returned.
     ///
     /// > Tip: This method resizes the `base` image to a specified size by drawing it into that size. If you require a
-    /// smaller thumbnail of the image, consider using ``downsampledImage(data:to:scale:)`` instead, as it offers
+    /// smaller thumbnail of the image, consider using ``downsampledImage(data:to:scale:maxPixelCount:)`` instead, as it offers
     /// improved efficiency.
     public func resize(to size: CGSize) -> KFCrossPlatformImage {
         guard let _ = cgImage else {
@@ -260,7 +260,7 @@ extension KingfisherWrapper where Base: KFCrossPlatformImage {
     /// > For any non-CG-based image, the `base` image itself is returned.
     ///
     /// > Tip: This method resizes the `base` image to a specified size by drawing it into that size. If you require a
-    /// smaller thumbnail of the image, consider using ``downsampledImage(data:to:scale:)`` instead, as it offers
+    /// smaller thumbnail of the image, consider using ``downsampledImage(data:to:scale:maxPixelCount:)`` instead, as it offers
     /// improved efficiency.
     public func resize(to targetSize: CGSize, for contentMode: ContentMode) -> KFCrossPlatformImage {
         let newSize = size.kf.resize(to: targetSize, for: contentMode)
